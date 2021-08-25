@@ -1,0 +1,14 @@
+---
+title: "Quantmode_1"
+author: "Diego Guerrero"
+date: "8/24/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# getSymbols()
+
+Carga los precios de las stocks desde 2007 a la actualidad 

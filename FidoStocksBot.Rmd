@@ -1,0 +1,73 @@
+---
+title: "RTWEET"
+author: "Ivan Uriel Olvera Perez"
+date: "25/8/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Vamos a probar la libreria de rtweet
+
+```{r}
+library(rtweet)
+library(tidyverse)
+#Ahora usaremos un comando para llamar una viñeta con un tutorial para vincular nuestra cuenta de twitter con R
+vignette("auth", package = "rtweet")
+
+```
+
+```{r}
+# Cargamos rtweet
+library(rtweet)
+library(tidyverse)
+library(httpuv)
+# Almacenamos nuestras llaves (aquí deben de poner sus llaves personales pero dejare las mías porque uds son de confianza)
+api_key <- "e3hoiSSKA5Gkcoxo2FOQV4dw6"
+api_secret_key <- "7Ys9RMOQiBjrxJETK8DJN9R8GKpAlCStbFkxjRGDtuB8ftji0q"
+
+# 
+token <- create_token(
+  app = "FidoStocksBot",
+  consumer_key = api_key,
+  consumer_secret = api_secret_key)
+
+#F a mi no me funciono este método, me marca error pero igual lo dejo si se quieren saltar el siguiente paso
+
+```
+
+```{r}
+#Para este caso tenemos que generar nosotros directamente desde el portar de twitter developer nuestra token y secret token
+library(rtweet)
+library(httpuv)
+api_key <- "e3hoiSSKA5Gkcoxo2FOQV4dw6"
+api_secret_key <- "7Ys9RMOQiBjrxJETK8DJN9R8GKpAlCStbFkxjRGDtuB8ftji0q"
+access_token <- "386220193-pR1NntJqcIaBTAZgmLSUoqYfa9yh6CWxV06a7FQI"
+access_token_secret <- "L7z5cKSOib7bvb7YVhAl8JWSjAkYXWlZVxCJiLlyJRi05"
+
+token <- create_token(
+  app = "FidoStocksBot",
+  consumer_key = api_key,
+  consumer_secret = api_secret_key,
+  access_token = access_token,
+  access_secret = access_token_secret)
+
+#Parece que funciono aunque pensé que me mandaría al navegador
+```
+Parece ser que ya tengo autorización probemos a buscar twits de messi
+```{r}
+rt <- search_tweets(q = "messi", n = 10)
+rt
+```
+
+Ahora busquemos 500 twits sobre acciones de apple
+```{r}
+apple <- search_tweets(q = "apple and stock", n = 500, include_rts = FALSE, retryonratelimit = FALSE)
+
+#Veamos la tabla, aunque tenemos 90 columnas, así que tenemos que optimzar el comando para que nos lance unícamente las necesarias como texto, likes, usuario, seguidores del usuario y tal vez fecha; para así aumentar la veracidad del twit
+
+view(apple)
+```
+

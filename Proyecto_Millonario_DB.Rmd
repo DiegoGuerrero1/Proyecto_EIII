@@ -49,7 +49,7 @@ frx_EURUSD <- getSymbols(c("EURUSD=X"))
 
 # Era más o menos así
 
-# Se crea un data frame, jajaja que pendejo puse MXD
+# Se crea un data frame
 
 dframe_USDMXD <- data.frame(USDMXN=X) #Se pone el símbolo, pero por alguna razón se confunde con el "=X" y si lo pongo 
                                       #en comillas genera un csv pero con el nombre nada más  

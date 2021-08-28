@@ -67,7 +67,51 @@ Ahora busquemos 500 twits sobre acciones de apple
 apple <- search_tweets(q = "apple and stock", n = 500, include_rts = FALSE, retryonratelimit = FALSE)
 
 #Veamos la tabla, aunque tenemos 90 columnas, así que tenemos que optimzar el comando para que nos lance unícamente las necesarias como texto, likes, usuario, seguidores del usuario y tal vez fecha; para así aumentar la veracidad del twit
+head(apple)
 
-view(apple)
+```
+
+Ya investigué como filtrar la información para solo tener la más útil, como fecha de creación, texto y hashtags
+
+```{r}
+apple %>% dplyr::select(created_at,text,hashtags)
+
+```
+
+
+Ahora usaremos otra función de rtweet para capturar twits en tiempo real acerca de las acciones de apple
+
+```{r}
+st <- stream_tweets(q = "apple and stocks", timeout = 5)
+#Me marca un error, despues vemos que show
+```
+Vamos a evaluar los hashtags acerca del mercado de valores para ver de que se está hablando
+
+```{r}
+MercadoV <- search_tweets(
+  "Finance market",n=100,include_rts = FALSE,retryonratelimit=F)
+ht <- MercadoV %>% dplyr::select(created_at,screen_name,hashtags)
+
+ht <- unnest(ht,cols=c(hashtags))
+
+# Son muchos así que tomemos el top 20
+top.20 <- ht %>% filter(is.na(hashtags)==F) %>% 
+             group_by(hashtags) %>% summarise(count=n()) %>% 
+               arrange(-count) %>% filter(row_number() < 21) %>% 
+                 arrange(count) %>% mutate(hashtags=factor(hashtags,levels=hashtags))
+```
+
+Vamos a mostrarlos en una tabla 
+```{r}
+library(tidyr)
+library(ggplot2)
+library(ggthemes)
+library(data.table)
+ggplot(top.20,aes(x=hashtags,y=count)) + geom_bar(stat='identity') + 
+  coord_flip() + theme_fivethirtyeight() + 
+    ggtitle(label="Hashtags populares acerca del mercado financiero",
+            subtitle="hashtag use last 10 days") +
+     theme(plot.title = element_text(size = 14, face = "bold"),
+           plot.subtitle = element_text(face = "italic"))
 ```
 

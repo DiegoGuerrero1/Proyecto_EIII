@@ -1,0 +1,209 @@
+---
+title: "Primer parcial de Estancia de Investigación III"
+author: "Diego Guerrero, Ivan Olvera, Oscar Ortega"
+date: "23/8/2021"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Equipo 4:
+- José Diego Guerrero Morales
+- Ivan Uriel Olvera Perez
+- Oscar Eduardo Ortega Penagos
+
+### Nombre del proyecto: 
+*Análisis por Procesamiento de Lenguaje Natural como posible predictor de precios en el mercado bursátil *.
+
+### **Objetivo:** 
+<div align="justify">Realizar un análisis cuantitativo sobre tweets recuperados mediante la API Rtweet en tiempo real y buscar una relación entre estos con los precios del mercado bursátil</div> 
+
+
+### **Fuente de las bases de datos:**
+
+API de twitter por medio de el paquete rtweet.
+API de yahoo finance por medio del paquete quantmod.
+
+### **PASO 1:** Lectura de la base de datos
+
+A continuación vamos a acceder al API de twitter y descargar los tweets de nuestr interés 
+
+```{r}
+# Cargamos la libreria rtweet y tidyverse
+library(rtweet)
+library(tidyverse)
+
+#Creamos vectores para tener guardados los nombres de nuestras stocks y divisas 
+set_stocks <- c("AAPL","TSLA","CL=F","GC=F")
+set_forex <- c("USDMXD","EURCNY","EURJPY","EURUSD")
+
+# Ahora buscamos 500 twits sobre acciones de apple, tesla, petróleo, oro, "USDMXD","EURCNY","EURJPY","EURUSD"
+
+
+
+# Usamos search_tweets para sacar 500 tweets sobre acciones de nuestro set de stocks y de nuestras divisas de forex
+
+apple <- search_tweets(q = "apple and stock", n = 500, include_rts = FALSE, retryonratelimit = FALSE)
+
+# Vamos a evaluar los hashtags acerca del mercado de valores para ver de que se está hablando
+MercadoV <- search_tweets(
+  "Finance market",n=100,include_rts = FALSE,retryonratelimit=F)
+ht <- MercadoV %>% dplyr::select(created_at,screen_name,hashtags)
+ht <- unnest(ht,cols=c(hashtags))
+# Son muchos así que tomemos el top 20
+top.20 <- ht %>% filter(is.na(hashtags)==F) %>% 
+             group_by(hashtags) %>% summarise(count=n()) %>% 
+               arrange(-count) %>% filter(row_number() < 21) %>% 
+                 arrange(count) %>% mutate(hashtags=factor(hashtags,levels=hashtags))
+
+# Vamos a mostrarlos en una tabla
+
+library(tidyr)
+library(ggplot2)
+library(ggthemes)
+library(data.table)
+
+ggplot(top.20,aes(x=hashtags,y=count)) + geom_bar(stat='identity') + 
+  coord_flip() + theme_fivethirtyeight() + 
+    ggtitle(label="Hashtags populares acerca del mercado financiero",
+            subtitle="hashtag use last 10 days") +
+     theme(plot.title = element_text(size = 14, face = "bold"),
+           plot.subtitle = element_text(face = "italic"))
+
+```
+
+***Ahora usamos la API de yahoo finance para obtener los precios***
+
+```{r}
+
+# Cargamos la librería quantmod 
+
+library(quantmod)
+
+#Extraemos los precios con getSymbols() y le pasamos de argumento un vector con el símbolo de la stock, tiene que coincidir con los que usa yahoo finance
+
+stks_AAPL <- getSymbols(c("AAPL"))
+stks_TSLA <- getSymbols(c("TSLA"))
+stks_CRUDEOIL <- getSymbols(c("CL=F"))
+stks_GOLD <- getSymbols(c("GC=F"))
+
+
+
+# Hacemos lo mismo con las divisas de forex 
+frx_USDMXD <- getSymbols(c("USDMXN=X"))
+frx_EURCNY <- getSymbols(c("EURCNY=X"))
+frx_EURJPY <- getSymbols(c("EURJPY=X"))
+frx_EURUSD <- getSymbols(c("EURUSD=X"))
+class(`USDMXN=X`)
+# Ahora exportamos las bases de datos en csv 
+
+## Stocks:
+
+# Primeramente usamos el la función data.frame para convertir de xts a data frame
+# IMPORTANTE: Se pone como argumento el símbolo, no el objeto que creamos explícitamente
+
+dframe_AAPL <- data.frame(AAPL)
+
+# Pasamos el data frame que creamos a la función write_csv
+
+write_csv(x = dframe_AAPL, file = "AAPL_db.csv") %>% 
+  str()
+
+# Repetimos con los demás
+
+dframe_TSLA <- data.frame(TSLA) 
+write_csv(x = dframe_TSLA, file = "TSLA_db.csv") %>% 
+  str()
+
+dframe_GOLD <- data.frame(`GC=F`)
+write_csv(x = dframe_GOLD, file = "GOLD.csv") %>% 
+  str()
+
+dframe_OIL <- data.frame(`CL=F`)
+write_csv(x = dframe_OIL, file = "OIL.csv") %>% 
+  str()
+
+
+## Forex : 
+
+# Aquí una pequeña observación. El símbolo al contener un "=", este se detecta como operador o asignación. Para evitar esto se usan acentos invertidos: 
+
+dframe_USDMXD <- data.frame(`USDMXN=X`) 
+write_csv(x = dframe_EURJPY, file = "USDMXN.csv") 
+
+dframe_EURJPY<- data.frame(`EURJPY=X`)
+write_csv(x = dframe_EURJPY, file = "EURJYEN.csv") 
+
+dframe_EURUSD <- data.frame(`EURUSD=X`)
+write_csv(x = dframe_EURUSD, file = "EURUSD.csv") 
+
+dframe_EURCNY <- data.frame(`EURCNY=X`)
+write_csv(x = dframe_EURCNY, file = "EURCNY.csv") 
+```
+
+
+
+
+### **PASO 2:** Curado de la base de datos
+```{r}
+library(dbplyr)
+# Twitter 
+
+## filtramos por las columnas que más nos interesan 
+  apple_a <- select(applecreated_at,text,hashtags,screen_name,followers_count,verified)
+  
+cur <- c("created_at","text","hashtags","screen_name","followers_count","verified")
+TW_AAPL <- select(apple, cur)
+TW_AAPL
+
+# "Created_at" lo cambiamos a "Date" 
+
+names(TW_AAPL)[1] <- "Date"
+
+TW_AAPL
+
+# Ahora para Yahoo finance 
+
+#leemos el csv que creamos. Al parecer tiene una X en donde van las fechas
+AAPL_csv<-read.csv("~/Traiding_News_Bot/Databases/Stocks/AAPL_db.csv")
+
+#Lo cambiamos por "Date" también para que sea más intuitivo
+
+names(AAPL_csv)[1] <- "Date" %>% 
+  head()
+
+
+
+
+```
+
+### Exploración final 
+```{r}
+set_stocks # Usamos el vector para llamar a nuestras bases de datos por su nombre
+
+str(AAPL_csv)
+str(TSLA_csv)
+str(GOLD_csv)
+str(OIL_csv)
+
+set_forex
+
+str(USDMXD_csv)
+str(EURCNY_csv)
+str(EURJPY_csv)
+str(EURUSD_csv)
+
+
+```
+
+
+
+
+
+
+
+

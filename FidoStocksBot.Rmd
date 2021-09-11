@@ -64,7 +64,7 @@ rt
 
 Ahora busquemos 500 twits sobre acciones de apple
 ```{r}
-apple <- search_tweets(q = "apple and stock", n = 500, include_rts = FALSE, retryonratelimit = FALSE)
+apple <- search_tweets(q = "apple and stocks", n = 500, include_rts = FALSE, retryonratelimit = FALSE)
 
 #Veamos la tabla, aunque tenemos 90 columnas, así que tenemos que optimzar el comando para que nos lance unícamente las necesarias como texto, likes, usuario, seguidores del usuario y tal vez fecha; para así aumentar la veracidad del twit
 head(apple)
@@ -74,7 +74,9 @@ head(apple)
 Ya investigué como filtrar la información para solo tener la más útil, como fecha de creación, texto y hashtags
 
 ```{r}
-apple %>% dplyr::select(created_at,text,hashtags)
+Applecurado <- apple %>% dplyr::select(screen_name,created_at,text,hashtags,followers_count,favourites_count,verified)
+#Guardamos nuestra base de datos curada en un csv 
+save_as_csv(Applecurado, "/Users/TELECOM/Proyecto_EIII/Proyecto_EIII/TW_AAPL_CUR.csv", prepend_ids = TRUE, na = "", fileEncoding = "UTF-8")
 
 ```
 
@@ -82,14 +84,16 @@ apple %>% dplyr::select(created_at,text,hashtags)
 Ahora usaremos otra función de rtweet para capturar twits en tiempo real acerca de las acciones de apple
 
 ```{r}
-st <- stream_tweets(q = "apple and stocks", timeout = 5)
+st <- stream_tweets(q = "covid19", timeout = 20)
+st
 #Me marca un error, despues vemos que show
+
 ```
 Vamos a evaluar los hashtags acerca del mercado de valores para ver de que se está hablando
 
 ```{r}
-MercadoV <- search_tweets(
-  "Finance market",n=100,include_rts = FALSE,retryonratelimit=F)
+StockMarket <- search_tweets(
+  "finance market and stocks",n=200,include_rts = FALSE,retryonratelimit=F)
 ht <- MercadoV %>% dplyr::select(created_at,screen_name,hashtags)
 
 ht <- unnest(ht,cols=c(hashtags))
@@ -114,4 +118,170 @@ ggplot(top.20,aes(x=hashtags,y=count)) + geom_bar(stat='identity') +
      theme(plot.title = element_text(size = 14, face = "bold"),
            plot.subtitle = element_text(face = "italic"))
 ```
+Vamos a crear y curar todas nuestras bases de datos 
+TESLA
+```{r}
+tesla <- search_tweets(q = "tsla and stocks", n = 500, include_rts = FALSE, retryonratelimit = FALSE)
+
+Teslacurado <- tesla %>% dplyr::select(screen_name,created_at,text,hashtags,followers_count,favourites_count,verified)
+#Guardamos nuestra base de datos curada en un csv 
+save_as_csv(Teslacurado, "/Users/TELECOM/Proyecto_EIII/Proyecto_EIII/TW_TSLA_CUR.csv", prepend_ids = TRUE, na = "", fileEncoding = "UTF-8")
+```
+GOLD
+```{r}
+GOLD <- search_tweets(q = "GOLD and stocks", n = 500, include_rts = FALSE, retryonratelimit = FALSE)
+
+GOLDcurado <- GOLD %>% dplyr::select(screen_name,created_at,text,hashtags,followers_count,favourites_count,verified)
+#Guardamos nuestra base de datos curada en un csv 
+save_as_csv(GOLDcurado, "/Users/TELECOM/Proyecto_EIII/Proyecto_EIII/TW_GOLD_CUR.csv", prepend_ids = TRUE, na = "", fileEncoding = "UTF-8")
+```
+CRUDE OIL
+```{r}
+CRUDEOIL <- search_tweets(q = "OIL and stocks", n = 700, include_rts = FALSE, retryonratelimit = FALSE)
+
+CRUDEOILcurado <- CRUDEOIL %>% dplyr::select(screen_name,created_at,text,hashtags,followers_count,favourites_count,verified)
+#Guardamos nuestra base de datos curada en un csv 
+save_as_csv(CRUDEOILcurado, "/Users/TELECOM/Proyecto_EIII/Proyecto_EIII/TW_CRUDEOIL_CUR.csv", prepend_ids = TRUE, na = "", fileEncoding = "UTF-8")
+```
+EUR/JPY
+```{r}
+EURJPY <- search_tweets(q = "EUR/JPY and forex", n = 10000, include_rts = FALSE, retryonratelimit = FALSE)
+
+EURJPYcurado <- EURJPY %>% dplyr::select(screen_name,created_at,text,hashtags,followers_count,favourites_count,verified)
+#Guardamos nuestra base de datos curada en un csv 
+save_as_csv(EURJPYcurado, "/Users/TELECOM/Proyecto_EIII/Proyecto_EIII/TW_EURJPY_CUR.csv", prepend_ids = TRUE, na = "", fileEncoding = "UTF-8")
+```
+EURUSD
+```{r}
+EURUSD <- search_tweets(q = "EUR/USD and forex", n = 10000, include_rts = FALSE, retryonratelimit = FALSE)
+
+EURUSDcurado <- EURUSD %>% dplyr::select(screen_name,created_at,text,hashtags,followers_count,favourites_count,verified)
+#Guardamos nuestra base de datos curada en un csv 
+save_as_csv(EURUSDcurado, "/Users/TELECOM/Proyecto_EIII/Proyecto_EIII/TW_EURUSD_CUR.csv", prepend_ids = TRUE, na = "", fileEncoding = "UTF-8")
+```
+USDMXN
+```{r}
+USDMXN <- search_tweets(q = "USDMXN AND FX", n = 1000, include_rts = FALSE, retryonratelimit = FALSE)
+
+USDMXNcurado <- USDMXN %>% dplyr::select(screen_name,created_at,text,hashtags,followers_count,favourites_count,verified)
+#Guardamos nuestra base de datos curada en un csv 
+save_as_csv(USDMXNcurado, "/Users/TELECOM/Proyecto_EIII/Proyecto_EIII/TW_USDMXN_CUR.csv", prepend_ids = TRUE, na = "", fileEncoding = "UTF-8")
+```
+```{r}
+library(rtweet)
+
+#Con este comando nos da las tendencias mundiales en twitter
+trends <- get_trends(woeid = 1)
+
+```
+```{r}
+library(readr)
+tweetsA <- read_csv("TW_AAPL_CUR.csv")
+str(tweetsA)
+
+```
+
+```{r}
+# Construir nuestro corpus
+library(tm)
+corpus <- iconv(tweetsA$text, to = "utf-8")
+corpus <- Corpus(VectorSource(corpus))
+inspect(corpus[1:5])
+
+# Limpiar texto
+corpus <- tm_map(corpus, tolower)
+inspect(corpus[1:5])
+
+corpus <- tm_map(corpus, removePunctuation)
+inspect(corpus[1:5])
+
+corpus <- tm_map(corpus, removeNumbers)
+inspect(corpus[1:5])
+
+cleanset <- tm_map(corpus, removeWords, stopwords('english'))
+inspect(cleanset[1:5])
+
+removeURL <- function(x) gsub('http[[:alnum:]]*', '', x)
+cleanset <- tm_map(cleanset, content_transformer(removeURL))
+inspect(cleanset[1:5])
+
+cleanset <- tm_map(cleanset, removeWords, c('aapl', 'apple'))
+cleanset <- tm_map(cleanset, gsub, 
+                   pattern = 'stocks', 
+                   replacement = 'stock')
+
+cleanset <- tm_map(cleanset, stripWhitespace)
+inspect(cleanset[1:5])
+
+#matrix de términos del cdoc
+tdm <- TermDocumentMatrix(cleanset)
+tdm <- as.matrix(tdm)
+tdm[1:10, 1:20]
+
+# Bar plot
+w <- rowSums(tdm)
+w <- subset(w, w>=25)
+barplot(w,
+        las = 2,
+        col = rainbow(50))
+
+# Ahora crearemos una nube de palabras par que sea mas facil el analisis 
+library(wordcloud)
+w <- sort(rowSums(tdm), decreasing = TRUE)
+set.seed(222)
+wordcloud(words = names(w),
+          freq = w,
+          max.words = 150,
+          random.order = F,
+          min.freq = 5,
+          colors = brewer.pal(8, 'Dark2'),
+          scale = c(5, 0.3),
+          rot.per = 0.7)
+
+library(wordcloud2)
+cloudw<- data.frame(names(w), w)
+colnames(w) <- c('word', 'freq')
+wordcloud2(w,
+           size = 0.7,
+           shape = 'triangle',
+           rotateRatio = 0.5,
+           minSize = 1)
+
+letterCloud(w,
+            word = "apple",
+            size=1)
+
+
+```
+
+```{r}
+
+# Sentiment analysis
+library(syuzhet)
+library(lubridate)
+library(ggplot2)
+library(scales)
+library(reshape2)
+library(dplyr)
+
+# Read file
+apple <- read.csv(file.choose(), header = T)
+tweetsA <- iconv(apple$text, to = 'utf-8')
+
+# Obtain sentiment scores
+s <- get_nrc_sentiment(tweetsA)
+head(s)
+tweets[4]
+get_nrc_sentiment('delay')
+
+# Bar plot
+barplot(colSums(s),
+        las = 2,
+        col = rainbow(10),
+        ylab = 'Count',
+        main = 'Sentiment Scores for Apple Tweets')
+```
+
+
+
 

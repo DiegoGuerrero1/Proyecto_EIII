@@ -42,14 +42,14 @@ stocks_db <- getSymbols("AAPL;TSLA;CL=F;GC=F") #No funcionó jeje, tal vez para 
 
 # Forex 
 
-frx_USDMXD <- getSymbols(c("USDMXN=X"))
+frx_USDMXN <- getSymbols(c("USDMXN=X"))
 frx_EURCNY <- getSymbols(c("EURCNY=X"))
 frx_EURJPY <- getSymbols(c("EURJPY=X"))
 frx_EURUSD <- getSymbols(c("EURUSD=X"))
 
 # Era más o menos así
 
-# Se crea un data frame
+# Se crea un data frame, jajaja que pendejo puse MXD
 
 dframe_USDMXD <- data.frame(USDMXN=X) #Se pone el símbolo, pero por alguna razón se confunde con el "=X" y si lo pongo 
                                       #en comillas genera un csv pero con el nombre nada más  

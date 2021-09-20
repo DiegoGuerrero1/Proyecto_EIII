@@ -225,7 +225,7 @@ barplot(w,
         las = 2,
         col = rainbow(50))
 
-# Ahora crearemos una nube de palabras par que sea mas facil el analisis 
+# Ahora crearemos una nube de palabras para que sea mas facil el analisis 
 library(wordcloud)
 w <- sort(rowSums(tdm), decreasing = TRUE)
 set.seed(222)
@@ -271,7 +271,6 @@ tweetsA <- iconv(apple$text, to = 'utf-8')
 # Obtain sentiment scores
 s <- get_nrc_sentiment(tweetsA)
 head(s)
-tweets[4]
 get_nrc_sentiment('delay')
 
 # Bar plot
@@ -282,6 +281,83 @@ barplot(colSums(s),
         main = 'Sentiment Scores for Apple Tweets')
 ```
 
+```{r}
+getwd()
+bd.tsla <- read.csv("TW_TSLA_CUR.csv")
+str(bd.tsla)
 
+```
+
+```{r}
+# Construir nuestro corpus
+library(tm)
+corpus2 <- iconv(bd.tsla$text, to = "utf-8")
+corpus2 <- Corpus(VectorSource(corpus2))
+inspect(corpus[1:5])
+
+# Limpiar texto
+corpus2 <- tm_map(corpus2, tolower)
+inspect(corpus[1:5])
+
+corpus2 <- tm_map(corpus2, removePunctuation)
+inspect(corpus[1:5])
+
+corpus2 <- tm_map(corpus2, removeNumbers)
+inspect(corpus[1:5])
+
+cleanset2 <- tm_map(corpus2, removeWords, stopwords('english'))
+inspect(cleanset[1:5])
+
+removeURL2 <- function(x) gsub('http[[:alnum:]]*', '', x)
+cleanset2 <- tm_map(cleanset, content_transformer(removeURL))
+inspect(cleanset[1:5])
+
+cleanset2 <- tm_map(cleanset, removeWords, c('tsla', 'tesla'))
+cleanset2 <- tm_map(cleanset2, gsub, 
+                   pattern = 'stocks', 
+                   replacement = 'stock')
+
+cleanset2 <- tm_map(cleanset2, stripWhitespace)
+inspect(cleanset[1:5])
+
+#matrix de términos del cdoc
+tdm2 <- TermDocumentMatrix(cleanset2)
+tdm2 <- as.matrix(tdm2)
+tdm2[1:10, 1:20]
+
+# Bar plot
+z <- rowSums(tdm2)
+z <- subset(z, w>=25)
+barplot(z,
+        las = 2,
+        col = rainbow(50))
+
+# Ahora crearemos una nube de palabras para que sea mas facil el analisis 
+library(wordcloud)
+z <- sort(rowSums(tdm2), decreasing = TRUE)
+set.seed(222)
+wordcloud(words = names(z),
+          freq = z,
+          max.words = 150,
+          random.order = F,
+          min.freq = 5,
+          colors = brewer.pal(8, 'Dark2'),
+          scale = c(5, 0.3),
+          rot.per = 0.7)
+
+library(wordcloud2)
+cloudw2<- data.frame(names(z), z)
+colnames(z) <- c('word', 'freq')
+wordcloud2(z,
+           size = 0.7,
+           shape = 'triangle',
+           rotateRatio = 0.5,
+           minSize = 1)
+
+letterCloud(z,
+            word = "tesla",
+            size=1)
+
+```
 
 

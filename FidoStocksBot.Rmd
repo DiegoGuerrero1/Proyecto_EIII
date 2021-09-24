@@ -94,7 +94,8 @@ Vamos a evaluar los hashtags acerca del mercado de valores para ver de que se es
 ```{r}
 StockMarket <- search_tweets(
   "finance market and stocks",n=200,include_rts = FALSE,retryonratelimit=F)
-ht <- MercadoV %>% dplyr::select(created_at,screen_name,hashtags)
+ht <- StockMarket %>% dplyr::select(created_at,screen_name,hashtags)
+
 
 ht <- unnest(ht,cols=c(hashtags))
 
@@ -205,10 +206,12 @@ removeURL <- function(x) gsub('http[[:alnum:]]*', '', x)
 cleanset <- tm_map(cleanset, content_transformer(removeURL))
 inspect(cleanset[1:5])
 
-cleanset <- tm_map(cleanset, removeWords, c('aapl', 'apple'))
-cleanset <- tm_map(cleanset, gsub, 
-                   pattern = 'stocks', 
-                   replacement = 'stock')
+cleanset <- tm_map(cleanset, removeWords, c('aapl', 'apple')) 
+#Aquí eliminamos la palabra apple, ya que no nos interesa su frecuencia porque es la palabra filtrada para la búsqueda de los tweets
+cleanset <- tm_map(cleanset, removeWords, c('stock', 'stocks'))
+#Hacemos lo mismo con la palabra stock puesto que es la misma situación
+
+
 
 cleanset <- tm_map(cleanset, stripWhitespace)
 inspect(cleanset[1:5])
@@ -313,9 +316,8 @@ cleanset2 <- tm_map(cleanset, content_transformer(removeURL))
 inspect(cleanset[1:5])
 
 cleanset2 <- tm_map(cleanset, removeWords, c('tsla', 'tesla'))
-cleanset2 <- tm_map(cleanset2, gsub, 
-                   pattern = 'stocks', 
-                   replacement = 'stock')
+cleanset2 <- tm_map(cleanset, removeWords, c('stock', 'stocks'))
+
 
 cleanset2 <- tm_map(cleanset2, stripWhitespace)
 inspect(cleanset[1:5])
@@ -358,6 +360,9 @@ letterCloud(z,
             word = "tesla",
             size=1)
 
+```
+```{r}
+view(z)
 ```
 
 

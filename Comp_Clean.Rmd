@@ -17,6 +17,7 @@ library(rtweet)
 library(quantmod)
 library(tidyverse)
 library(stringi)
+library(quanteda)
 
 
 ```
@@ -122,17 +123,85 @@ ggplot()
 ```
 
 
+# Quanteda Procesamiento de lenguaje Natural 
 
+Para crear la DTM necesitamos primero crear el corpus. Ya con el corpus creamos la DTM pero primero tenemos que realizar **steming**, esto se refiere a agrupar plurales y letras capitalizadas como uno sólo para crear un concepto, ejemplo: gato, gatos, Gato se refieren al animal gato pero para la computadora son diferentes; para eso es el **steming**. DEspués evitamos las palabras que no crean un concepto como adjetivos, en Inglés se le llaman **stopwords**. 
 
 ```{r warning=TRUE}
-?search_tweets
+#Creamos el corpus: Primer argumento es la base de datos, con text_field indicamos en qué columna se encuentra el texto 
+
+corpAAPL = corpus(CM_AAPL, text_field = 'text')
+
+#Creamos la DTM 
+
+tokAAPL = tokens(x = corpAAPL, remove_url = T, remove_punct = T) #Priemro tenemos que tokenizar, aquí removemos urls y puntuaciones
+
+dtmAAPL = dfm(x = tokAAPL, stem=T) # Ahora si creamos la dtm con el token, y ponemos stem = T para stemming
+
+#Creo que tenemos que quitar las palabras que usamos para obtener los tweets como Apple, stock ya las usamos para generar los tweets y obviamente el algoritmos las clasificará como palabras que se repiten en todos los casos, esto es redundante porque eso ya lo sabemos. Y obviamente las stopwords
+
+dtmAAPL <- dfm_remove(dtmAAPL, stopwords('english') ) #Quitamos las stopwords
+
+redundant <- c('apple','appl','stock', 'stockmarket','aapl')
+
+dtmAAPL <- dfm_remove(dtmAAPL, redundant) #Ahora quitamos las palabras redundantes
 
 
-ggplot(CM_AAPL)
+
+
+
+
+#Checamos
+
+View(dtmAAPL) 
+str(dtmAAPL)
+
+
+#Al realizar la dtm quita las fechas, por eso usamos los tweets que ya fueron emparejados con los precios de las stocks. No pierden el orden, de esta manera podemos saber la fecha de un texto con su número. 
+
+dtmAAPL # Vemos las estadísticas. 
+
+# Si tuviéramos más observaciones sería bueno conservar sólo las que se repiten más de diez veces, pero como estamos restringidos por rtweet lo dejamos aśi. 
 
 
 
 ```
 
+# Es hora de plotear
+
+
+```{r}
+#POr alguna razón quanteda como que se fragmentó, entponces tenemos que implementar más librerías
+library(quanteda.textplots)
+library(quanteda.textmodels)
+library(quanteda.textstats)
+
+textplot_wordcloud(dtmAAPL, max_words = 50) #Aparece un emoji, el emoji de la flecha abajo roja indicando una baja en los precios jajaja
+textplot_wordcloud(dtmAAPL, max_words = 100, color = c('blue', 'magenta', 'red'))
+
+#Hay dos cosas que no me gustan, los hashtags hacen que se repitan los conceptos y no son detectados por el stemming y la palabra stock sigue apareciendo. 
+
+#Creo que tendré que modificar la CM_AAPL para quitar los caracteres # 
+
+View(CM_AAPL)
+CM_AAPLrp <- CM_AAPL
+?str_replace
+CM_AAPL$text <- str_remove_all(string = CM_AAPL$text, pattern = "#") 
+View(CM_AAPLrp)
+
+#Regresar a volver a cargar los tokens ^^^
+#Ahora si lso hashtags se eliminaron
+
+textstat_frequency(dtmAAPL, n=1000)
+
+k = kwic(corpAAPL, 'buy', window = 5)
+
+head(k,10)
+
 ```
+
+# Analisis
+
+
+
 

@@ -1,0 +1,138 @@
+---
+title: "Preparing_Data"
+author: "Diego Guerrero"
+date: "9/25/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+#Libraries
+libs <- c('rtweet','quantmod','tidyverse','dyplr')
+library(rtweet)
+library(quantmod)
+library(tidyverse)
+library(stringi)
+
+
+```
+# Limpieza
+*Al parecer nuestros tweets y los precios no tinen ningúna fecha en común, se me ocurre jalar más tweets. Sin embargo normalmente hay varios tweets en un día, por lo tanto tendría que combinar la database con el sentiment analysis pero tendría que hacer las observaciones por día.*
+```{r}
+
+#Extraemos los datos de twitter y nos aseguramos que la columna de created_at sea caracter para poder pasarlo a Date
+
+  
+TW_AAPL_CUR <- search_tweets("Apple stock",n = 15000, include_rts = FALSE,lang = "en")
+View(TW_AAPL_CUR)
+str(TW_AAPL_CUR)
+summary(TW_AAPL_CUR)
+names(TW_AAPL_CUR)
+#Al parecer sólo hay 820
+TW_AAPL_CUR <- select(TW_AAPL_CUR,created_at,text,followers_count,verified)
+TW_AAPL_CUR$Date <- as.character(TW_AAPL_CUR$Date)
+
+View(TW_AAPL_CUR)
+
+#Cambiamos created_at por Date
+
+names(TW_AAPL_CUR)[1] <- "Date"
+names(TW_AAPL_CUR)
+
+
+```
+
+*Como en la base de datos de precios no tenemos la hora, sólo la fecha. Tendremos que eliminar la hora para poder hacer la serie temporal*
+
+```{r}
+
+# Le decimos que desde el caracter 11 al 19 de la columna de "Date" los reemplace por "         ", es importante notar que estos espacios actúan como un corrector, tienen que ser el mismo número que los caracteres, sino, no alcanzarán a taparlos. 
+
+substring(TW_AAPL_CUR$Date,11,19) <- "          "
+View(TW_AAPL_CUR)
+str(TW_AAPL_CUR)
+
+#En este punto ya tapamos la hora, lo que sigue es eliminar esos espacios usando str_remove_all, le pasamos la columna como la strng y en el patrón ponemos " " para que busque por espacios. 
+
+#Eso lo pasamos como argumento a as.Date para que lo ponga en formato de fecha. 
+
+TW_AAPL_CUR$Date <- as.Date(str_remove_all(TW_AAPL_CUR$Date, " "))
+str(TW_AAPL_CUR)
+#Ahora tenemos una columnda de Date que es compatible con la columna Date de la DB de precios. 
+View(TW_AAPL_CUR)
+
+
+```
+## Limpieza de stocks
+
+```{r}
+#Recuperamos los precios del csv
+AAPL_stock<-getSymbols(c("AAPL"))
+
+#Cambiamos la primer columna a Date
+names(AAPL)
+
+#Creamos un dataframe para poder utilizarlo con la mayoría de funciones en R, sin embargo dejamos AAPL ya que puede usarse para sacarle mucho jugo con el paquete de quantmod, como el uso de indicadores.
+AAPL_sdf <- data.frame(AAPL) 
+
+
+#Checamos
+names(AAPL)
+
+#Las fechas las detecta como numerador de renglones, entonces agregamos una nueva columna con estos para poder usarla
+#Lo pasamos como fecha con as.Date y así nos ahorramos convertirla después. 
+AAPL_sdf$Date <- as.Date(row.names(x = AAPL_sdf))
+View(AAPL_sdf)
+str(AAPL_sdf)
+
+
+```
+# Haciendo las Bases de datos compatibles
+
+```{r}
+#Realmente los usuarios no son importantes
+TW_AAPL_CUR <-select(TW_AAPL_CUR, -screen_name)
+names(TW_AAPL_CUR)
+View(TW_AAPL_CUR)
+str(TW_AAPL_CUR)
+
+#Ahora creamos una nueva data frame, los precios y los tweets estarán en una misma fila si es que coinciden las fechas 
+
+M_AAPL <-merge(TW_AAPL_CUR, AAPL_sdf, by.x = "Date", by.y = "Date")
+View(M_AAPL)
+#Eliminamos .AAPL pues estamos hablando de AAPL. Para eso usamos la función str_remove. 
+names(M_AAPL) <- str_remove(names(M_AAPL), "AAPL.") 
+View(M_AAPL)
+
+
+#realmente solo nos interesa el precio de cierre entonces podemos desechar las demás columnas y 
+
+
+names(M_AAPL)
+CM_AAPL <- select(M_AAPL, Date, text, followers_count, verified,Close)
+
+
+View(CM_AAPL)
+ggplot()
+
+```
+
+
+
+
+```{r warning=TRUE}
+?search_tweets
+
+
+ggplot(CM_AAPL)
+
+
+
+```
+
+```
+

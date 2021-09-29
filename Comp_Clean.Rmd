@@ -176,7 +176,7 @@ library(quanteda.textplots)
 library(quanteda.textmodels)
 library(quanteda.textstats)
 
-textplot_wordcloud(dtmAAPL, max_words = 50) #Aparece un emoji, el emoji de la flecha abajo roja indicando una baja en los precios jajaja
+textplot_wordcloud(dtmAAPL, max_words = 50) #Aparece un emoji, el emoji de la flecha abajo roja indicando una baja en los precios jajaja puede ser usado en el análisis
 textplot_wordcloud(dtmAAPL, max_words = 100, color = c('blue', 'magenta', 'red'))
 
 #Hay dos cosas que no me gustan, los hashtags hacen que se repitan los conceptos y no son detectados por el stemming y la palabra stock sigue apareciendo. 
@@ -192,16 +192,210 @@ View(CM_AAPLrp)
 #Regresar a volver a cargar los tokens ^^^
 #Ahora si lso hashtags se eliminaron
 
-textstat_frequency(dtmAAPL, n=1000)
 
-k = kwic(corpAAPL, 'buy', window = 5)
-
-head(k,10)
 
 ```
 
 # Analisis
 
+## Rule based
+Busca keywords para decir si es bueno o malo. El humano pone las reglas, que buscamos y como lo buscamos. Se usan diccionarios, esta palabra tiene un valor sentimental de 1.23 y así. 
+
+ 
+```{r}
+myDict <- dictionary(list(terror = c('terror*'), economy = c('job', 'business', 'econom*')))
+
+dict_dtm <- dfm_lookup(dtmAAPL, myDict, nomatch = '_unmatched')
+
+dict_dtm
 
 
 
+```
+
+
+## Supervised machine Learning
+
+Se usan algoritmos como Naive Bayes, SVM y deep neural networks
+Necesitamos resultados ya etiquetados. En otras palabras necesitamos textos ya etiquetados como malos o buenos. 
+Ejemplo: 
+```{r}
+library(quanteda.textmodels)
+CM_AAPL
+
+
+
+```
+
+
+
+## Unsupervised Machine Learning
+Entrenan un modelo pero busca nuevos patrones 
+
+- Factor analysis
+- Topic modeling: 
+    Busca temas. 
+    Latent Dirichlet Allocation (LDA)
+      Cada palabra es clasificada con un tema. 
+  Ejemplo: 
+```{r}
+#Aqui es un poco complicado, para instalar el paquete topicmodels se necesita gsl (gnu scientific library), en mi sistema fedora la única forma en la que lo logré fue con el siguiente comando de CENTOS: 
+
+#sudo yum install gsl-devel
+
+library(quanteda)
+library(quanteda.textmodels)
+library(topicmodels)
+
+text 
+
+```
+  
+      
+- Scaling 
+ *IDEA*
+
+Se me ocurrió que podemos usar alguna función de quantmod para que detectara cuando hay un cambio en la trend, añadirlo en una columna si es que hubo un cambio y usar esa columna con supervised Machine Learning 
+
+
+## Preparando nueva columna con Quantmod
+
+```{r}
+library(quantmod)
+library(rtweet)
+
+getSymbols()
+?getSymbols
+
+#No puedo utilizar los indicadores de quantmod en un dataset normal, necesito usar el tipo de objeto que regresa la función getSymbols()
+#Para eso extraigo del objeto original AAPL las observaciones que concuerden con las que están en el dataset de los precios con los tweets. 
+
+
+AAPL_date <- AAPL[CM_AAPL$Date] #De esta forma no modifico el tipo de objeto que es, sólo el contenido 
+
+summary(AAPL_date) #Podemos ver que las fechas concuerdan con las del dataset de tweets y precios 
+AAPL_date
+
+#Sin embargo si le digo que seleccione las observaciones del dataset de tweets con precios van a salir fechas repetidas, tal vez si sólo me fijo en el límite inferior y superior de las fechas se pueda plotear algo mejor. 
+
+class(AAPL)
+class(AAPL_date)
+
+#Creo un vector que contenga una secuencia de fechas que use la mínima y máxima fecha de CM_AAPL.  
+
+dates<- seq(min(CM_AAPL$Date), max(CM_AAPL$Date), by='days')
+dates
+
+#Al parecer son muy pocos días, sólo 8 
+
+
+
+AAPL_schart <- chart_Series(x = AAPL, subset = dates)
+
+AAPL_schart 
+
+
+
+
+
+
+
+```
+
+*En este punto me doy cuenta que son muy pocos tweets, necesito más*
+
+
+# Sentiment analysis 
+Quanteda.sentiment es una extensión del paquete quanteda. Este paquete realiza un sentiment analysis de dos formas: Asignando polaridades de positivo y negativo, o bien etiqueta con valencias cierto grado de algun sentimiento en el texto. Creo que la segunda nos ayuda más para nuestro objetivo. 
+
+El link del repo de la extensión: https://github.com/quanteda/quanteda.sentiment/
+
+De ahí me basé para realizar esta parte. 
+
+```{r}
+
+
+devtools::install_github("quanteda/quanteda.sentiment") #Instalamos la extensión 
+
+library("quanteda", warn.conflicts = FALSE, quietly = TRUE) #No sé por que agregamos esos parámetros pero los pongo por si acaso 
+library("quanteda.sentiment")
+
+#Presentamos el diccionario que usaremos, este contiene palabras que han sido etiquetadas niveles de los sentimientos 
+#pleasure, arousal, dominance
+
+print(data_dictionary_ANEW, max_nval = 8) #El argumento max_nval es el máximo de variables que se imprimen en la pantalla
+
+
+names(data_dictionary_ANEW)
+#También está el diccionario AFINN el cual creo que será un poco más útil pues sólo tiene un rango de -5 a +5 de positividad
+names(data_dictionary_AFINN)
+#Por el momento seguiré con el ANEW
+lapply(valence(data_dictionary_ANEW), head, 8) 
+
+#Un ejemplo con un texto proveído por el paquete
+tail(data_corpus_inaugural) %>% 
+  textstat_valence(dictionary = data_dictionary_ANEW['pleasure'])
+
+#Utilizando nuestros tweets con AFFIN 
+
+tail(corpAAPL) %>% 
+  textstat_valence(dictionary = data_dictionary_AFINN)
+
+#Utilizando polarizado con nuestros tweets
+
+print(data_dictionary_geninqposneg, max_nval = 8) #Divide los sentimientos en positivos y en negativos 
+
+
+
+polAAPL <-  textstat_polarity(corpAAPL, dictionary = data_dictionary_geninqposneg) #0 es negativo y 1 es positivo 
+
+texts
+
+?ggplot()
+
+ggplot(polAAPL, aes(x = doc_id, y = sentiment))+
+  geom_smooth()
+
+names(CM_AAPL)
+ggplot(CM_AAPL, aes(x = Date, y = Close))+ geom_smooth()
+
+View(polAAPL)
+names(polAAPL)
+#Me doy cuenta que el tener varias observaciones repetidas hace que el grafico no se vea bien. Intentare combinarlas y sacar un valor promedio del sentimiento
+CM_AAPL
+wCM_AAPL <- pivot_wider(data = CM_AAPL, id_cols = AAPL)
+wCM_AAPL <- reshape(data = CM_AAPL, direction = "wide" ,v.names ="text", timevar = "followers_count", idvar = "Date")
+
+
+wCM_AAPL[3:4]
+wCM_AAPL[4] <-   paste(wCM_AAPL[4],wCM_AAPL[5])
+names(wCM_AAPL)
+
+names(wCM_AAPL)
+
+View(wCM_AAPL)
+
+
+AAPL_db <- read_csv("AAPL_db.csv") 
+View(AAPL_db)
+names(AAPL_db)
+names(AAPL_db)[1] <- "Date"
+
+TW_AAPL
+
+AAPL_db
+
+?gather
+?pivot_longer()
+
+## Graficamos
+ggplot(head(AAPL_db), aes(x=Date, y=AAPL.Close) )+
+geom_abline() 
+
+grafico <- AAPL_db  %>% 
+  ggplot( aes(x=Date, y=AAPL.Close) )+
+  
+
+ggplotly(grafico)
+
+```

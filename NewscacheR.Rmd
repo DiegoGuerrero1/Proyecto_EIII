@@ -9,17 +9,17 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Apis 
+# Paquetes 
 
-*Guardian News API:* 
+*Guardian News:* 
 
 https://cran.r-project.org/web/packages/guardianapi/index.html
 
-*Media News API:*  SÓLO PARA WINDOWS 
+*Media News:*  SÓLO PARA WINDOWS 
 
 https://cran.r-project.org/web/packages/MediaNews/index.html
 
-*NewsAnchor API:* SE NECESITA UNA API KEY DE NEWSAPI, SOLICITAR AQUÍ : https://newsapi.org/
+*NewsAnchor:* SE NECESITA UNA API KEY DE NEWSAPI, SOLICITAR AQUÍ : https://newsapi.org/
 
 https://cran.r-project.org/web/packages/newsanchor/index.html
 

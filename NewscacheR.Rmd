@@ -19,7 +19,7 @@ https://cran.r-project.org/web/packages/guardianapi/index.html
 
 https://cran.r-project.org/web/packages/MediaNews/index.html
 
-*NewsAnchor API:* SE NECESITA UNA  SUBSCRIPCIÓN 
+*NewsAnchor API:* SE NECESITA UNA API KEY DE NEWSAPI, SOLICITAR AQUÍ : https://newsapi.org/
 
 https://cran.r-project.org/web/packages/newsanchor/index.html
 

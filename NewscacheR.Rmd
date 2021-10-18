@@ -1,0 +1,119 @@
+---
+title: "NewsApis"
+author: "Diego Guerrero"
+date: "10/11/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Apis 
+
+*Guardian News API:* 
+
+https://cran.r-project.org/web/packages/guardianapi/index.html
+
+*Media News API:*  SÓLO PARA WINDOWS 
+
+https://cran.r-project.org/web/packages/MediaNews/index.html
+
+*NewsAnchor API:* SE NECESITA UNA  SUBSCRIPCIÓN 
+
+https://cran.r-project.org/web/packages/newsanchor/index.html
+
+*NewscatcheR:* NO BUSCA POR QWERY
+
+https://cran.r-project.org/web/packages/newscatcheR/index.htmls
+
+*RNewsflow:* 
+
+https://cran.r-project.org/web/packages/RNewsflow/index.html
+
+
+# NewsCatcher 
+
+
+```{r}
+library(newscatcheR)
+
+# EN la base de datos hay una url de noticias financieras (stocks) 
+
+newscatcheR::describe_url('stockmarketwire.com')
+
+#Para agilizar las cosas voy a crear una string con el url 
+
+stockm_url <- 'stockmarketwire.com'
+
+#Ahora vamos a jalar los headlines de las noticias 
+
+main <- get_headlines(stockm_url) #Manda el main de noticias 
+
+#No nos deja buscar a base de una string, no nos sirve. 
+
+```
+
+Media News
+
+```{r}
+
+
+#Sólo para Windows 
+
+
+```
+# newsanchor
+Este utiliza la api de NEWS, al parecer tiene varios proveedores de noticias
+
+Mi Api key: 198ac30fdb5548f38923c3336793abc2
+
+Se resetea en 24 horas. 
+
+```{r}
+library(newsanchor)
+library(quantmod)
+library(tidyverse)
+
+apikey <- '198ac30fdb5548f38923c3336793abc2'
+#usaremos la función para sacar noticias que tengan el query de apple. En source podría ser el financial times. 
+NEWS_APPL <- get_everything(query = 'Apple', from = min(AAPL_sdf$Date), to = max(AAPL_sdf$Date), language = 'en', api_key = apikey)
+
+# No me dejó jalar desde el 2007 pero dice que podemos sacar hasta el 2021-09-13 (trece de septiembre de 2021) por lo tanto nuestro rango es de 29 días 
+
+# Sin embargo, vamos a tener que volver a llamar a quanteda para aprovechar todos los días posibles 
+
+getSymbols(Symbols = 'AAPL')
+
+str(AAPL)
+View(AAPL)
+
+
+stocks_AAPL <- data.frame(AAPL)
+
+View(stocks_AAPL)
+stocks_AAPL <- as.Date(index(stocks_AAPL))
+
+
+
+
+newsanchor::terms_sources #Aquí están todas las fuentes de la api 
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

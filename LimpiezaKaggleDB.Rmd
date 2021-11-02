@@ -1,0 +1,92 @@
+---
+title: "Using Kaggle DB"
+author: "Diego Guerrero"
+date: "11/2/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# NUEVAS BSES DE DATOS 
+
+  Se encontró una base de datos la cual contiene 3 millones de tweets con respecto a las mayores empresas del mercado. Van del 2015 al 2020. La base de datos fue obtenida de:
+  
+  https://www.kaggle.com/omermetinn/tweets-about-the-top-companies-from-2015-to-2020
+
+# Objetivo 
+limpiar los dataframes de tweets y noticias de Kaggle, hacerlos compatibles con los precios obtenidos por quantmod, sentiment analysis en los tweets y noticias, graficar el sentimiento, crear regresión lineal. 
+
+## Objetivo Secundario 
+Correr supervised Machine Learning en vez de el sentiment analysis. 
+
+# Métodos 
+
+```{r}
+# Cargar librerías y dataframes
+
+library(tidyverse)
+library(quanteda)
+library(quantmod)
+library(stringi)
+library(stringr)
+library(lubridate)
+
+rawTweets <- read_csv("kaggleDB/Tweet.csv")
+View(rawTweets)
+summary(rawTweets)
+str(rawTweets)
+
+
+
+
+```
+ ## Limpiar data set 
+ Objetivos: 
+ 1. Pasar la columna de fecha a formato fecha 
+ 2. Sacar los que tengan AAPL 
+ 
+ ### Convertir a Fecha 
+ 
+```{r}
+rawTweets$post_date[1] %>% 
+  as_datetime() %>% 
+  as_date() %>% 
+  class()
+
+#De esta forma se modificarán todas las fechas 
+
+names(rawTweets)[3] <- "Date" #Cambioamos la columna por Date
+
+rawTweets$Date <- as_date(as_datetime(rawTweets$Date)) #Comvertimos a DateTime y luego a Date. 
+
+class(rawTweets$Date) #Verificamos el nuevo formato 
+
+
+```
+ ### Sacar AAPL
+
+```{r}
+
+#Seleccionamos las observaicones que contengan la palabra AAPL 
+
+tweetsAAPL <- rawTweets[grep("AAPL", rawTweets$body), ]
+
+#Nos aseguramos 
+head(tweetsAAPL)
+
+summary(tweetsAAPL)
+
+
+```
+
+
+
+Al parecer hay 1 384 359 de tweets acerca de apple. Sería cuestión de checar las demás empresas. 
+
+
+
+
+
+

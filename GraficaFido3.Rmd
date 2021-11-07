@@ -1,0 +1,348 @@
+---
+title: "DataFramesObt"
+author: "Diego Guerrero"
+date: "11/3/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Filtro de tweets
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(readr)
+
+
+names(tweetsAAPL)
+subtweets <- subset(x = tweetsAAPL, like_num > 1)
+
+subtweets <- subset(x = subtweets, Date > "2019-01-01")
+
+recovery <- subtweets
+
+summary(subtweets)
+str(subtweets)
+
+write.csv(subtweets , "2019_5l_Tweets.csv")
+
+names(subtweets)
+ # Checando dataframe 
+
+nrApple <-read.csv("RAPPLE.csv")
+
+
+#Sacando para tesla 
+
+tesla <- c("TSLA", "Tesla", "Elon Musk", "Stock")
+tweetsTsla <- rawTweets[grep("Tesla ", rawTweets$body), ]
+
+?grep
+
+
+str(tweetsTsla)
+summary(tweetsTsla)
+
+tweetsLikeTesla <- subset(x = tweetsAAPL, like_num > 1)
+str(tweetsLikeTesla)
+summary(tweetsLikeTesla)
+
+tweetsDateD <- subset(x = tweetsLikeTesla, Date > "2019-01-01") 
+str(tweetsDateD)
+summary(tweetsDateD)
+  
+write_csv(tweetsDateD, "tweetsTslaS.csv")
+
+
+#Creamos dataframes de Noticias de Apple y Tesla 
+
+allNews <-read.csv("us_equities_news_dataset.csv")
+
+summary(allNews)
+
+names(allNews)[6] <- "Date"
+
+names(allNews)
+
+allNews$Date <- as.Date(allNews$Date) #Hacemos un cohercing a Date 
+
+class(allNews$Date) #checamos 
+
+newsAaple <- subset(allNews, allNews$ticker == "AAPL")
+summary(newsAaple)
+newsAaple$Date <- as.Date(newsAaple$Date)
+
+newsAapleDate <- subset(newsAaple, newsAaple$Date > "2018-12-31")
+summary(newsAapleDate)
+str(newsAapleDate)
+
+newsAapleDate <- subset(newsAapleDate, newsAapleDate$Date < "2020-01-01") 
+str(newsAapleDate)
+summary(newsAapleDate)
+
+```
+# Creando Promedios (Time Series)
+# Objetivo:
+Crear una columna con el promedio de las polaridades de las fechas repetidas en una sola fecha.
+
+```{r}
+
+library(stringi)
+library(tidyverse)
+library(dplyr)
+library(readr)
+
+
+#Usaremos el dataset de nrAppl 
+
+nrApple$Date <- as.Date(nrApple$Date) #Casting
+
+repeatedApple <-nrApple #Guardamos otra variable con la base de datos con valores repetidos, por si acaso.
+
+str(repeatedApple) # Revisamos estructura 
+str(tweetsDateD)
+summary(tweetsDateD)
+summary(repeatedApple)
+
+?duplicated
+
+dup <- duplicated(nrApple$Date) #Creamos un vector lógico indicando que está repetido o no
+
+
+nrApple$Duplicated <- dup #Agregamos este vector al dataset
+
+str(nrApple)
+
+RepeatedTweets <- subset(nrApple, nrApple$Duplicated == TRUE) # Hacemos un subset de los datos que se fije si es TRUE la columna "Duplicated" 
+
+noRepeatedTweets <- subset(nrApple, nrApple$Duplicated == FALSE)#Hacemos un subset de los datos que se fije si es FLASE la columna "Duplicated" 
+
+
+head(RepeatedTweets) #Chemos dataframe
+str(RepeatedTweets)
+view(RepeatedTweets)
+
+head(noRepeatedTweets) #Checamos dataframe
+str(noRepeatedTweets)
+view(noRepeatedTweets)
+
+
+
+
+
+
+
+#Generar dataframe de Tesla 
+
+sixtNews <- read_csv("kaggleDB/raw_analyst_ratings(news).csv")
+
+summary(sixtNews)
+
+aaplNews <- stri_locate_all(str = sixtNews$stock , regex = "AAPL")
+
+sixtNews$date <- as.Date(sixtNews$date)
+
+aaplNews<-subset(sixtNews, sixtNews$stock == "TSLA" )
+
+tslaNews <- subset(aaplNews, aaplNews$date < "2020-01-01")
+
+write_csv(tslaNews , "tslaNews.csv")
+
+
+
+```
+
+# Time Series 
+
+```{r}
+############
+
+
+
+nrApple$Date <- as.Date(nrApple$Date) # Casting a la columna Date as.Date
+
+
+summary(nrApple) #Checando la base de datos 
+
+mergedTweets <- merge(nrApple, aaplClose) 
+
+write.csv(mergedTweets, "mergedTweets.csv")
+
+
+mergedTweets  %>% 
+  ggplot( aes(x=Date, y=AAPL.Close) )+
+  geom_line() 
+  
+
+mergedTweets  %>% 
+  ggplot( aes(x=Date, y=Polarity) )+
+  geom_line() 
+
+
+```
+
+
+# Promedio 
+```{r}
+
+library(stats)
+library(readr)
+
+promedio <- read.csv("promedios.csv")
+
+str(promedio)
+View(promedio)
+
+promedio$Date <- as.Date(promedio$Date)
+
+aaplClose
+
+aaplMerged <- merge(promedio, aaplClose) #combinamos los data frames para obtener un dataframe maestro con precios, sentimiento y subjetividad  
+
+write_csv(aaplMerged, "aaplMerged.csv")
+
+# Se necesita sacarlos para la serie de tiempo 
+aapl.Polaridad <- as.data.frame(aaplMerged$Polarity)
+aapl.Precios <- as.data.frame(aaplMerged$AAPL.Close) 
+
+class(aapl.Precios) #Les hacemos un casting a dataframe para poder generar la serie de tiempo 
+class(aapl.Polaridad)
+
+summary(aaplMerged) #Checamos las fechas para usarla en stats 
+
+#Min.   :2019-01-02 , Max.   :2019-12-31
+
+st.Precios.aapl <- ts(aapl.Precios , start = c(1,1), end = c(12, 12), frequency = 12 ) #Le damos formato de serie de tiempo 
+
+st.Precios.aapl
+
+?ts
+
+class(st.Precios.aapl) #Checamos 
+
+st.Precios.aapl
+
+#Analisis de componentes
+
+analisisComp.aaplPrice <- decompose(st.Precios.aapl)
+plot(analisisComp.aaplPrice, 
+     xlab = "Tiempo en meses",
+     ylab = "Aleatorio, Estacional, Tendencia, Observada",
+     cex.lab= 1)
+
+
+```
+
+
+
+
+
+
+
+*Ahora para las Polariodades*
+
+
+
+
+
+
+
+
+```{r}
+summary(aaplMerged) #Checamos las fechas para usarla en stats 
+
+#Min.   :2019-01-02 , Max.   :2019-12-31
+
+st.Polar.aapl <- ts(aapl.Polaridad , start = c(1,1), end = c(12, 12), frequency = 12 ) #Le damos formato de serie de tiempo 
+
+?ts
+
+class(st.Polar.aapl) #Checamos 
+
+st.Polar.aapl
+
+#Analisis de componentes
+
+analisisComp.aaplPolar <- decompose(st.Polar.aapl)
+plot(analisisComp.aaplPolar, 
+     xlab = "Tiempo en meses",
+     ylab = "Aleatorio, Estacional, Tendencia, Observada",
+     cex.lab= 1)
+
+
+```
+
+
+
+
+
+
+## Análisis de cambios estructurales
+
+
+
+## Precios 
+```{r}
+library(strucchange)
+
+bp_appl_price <- breakpoints(st.Precios.aapl ~1) #Llamamos al comando breakpoints. 
+
+?breakpoints
+
+summary(bp_appl_price) #Revisamos 
+
+plot(bp_appl_price)
+
+```
+
+```{r}
+
+bp <- breakpoints(bp_appl_price, breaks = 4)
+
+ocus.appl <- efp(st.Polar.aapl ~ breakfactor(bp), type = "OLS-CUSUM")
+plot(ocus.appl)
+
+```
+
+### Polaridad 
+
+```{r}
+library(strucchange)
+
+bp_appl_polar <- breakpoints(st.Polar.aapl ~1) #Llamamos al comando breakpoints. 
+
+?breakpoints
+
+summary(bp_appl_polar) #Revisamos 
+
+plot(bp_appl_polar)
+
+
+```
+
+
+```{r}
+bp <- breakpoints(bp_appl_polar, breaks = 3)
+
+ocus.appl <- efp(st.Polar.aapl ~ breakfactor(bp), type = "OLS-CUSUM")
+plot(ocus.appl)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -35,6 +35,7 @@ names(subtweets)
 
 nrApple <-read.csv("RAPPLE.csv")
 
+nrApple
 
 #Sacando para tesla 
 
@@ -83,6 +84,27 @@ str(newsAapleDate)
 newsAapleDate <- subset(newsAapleDate, newsAapleDate$Date < "2020-01-01") 
 str(newsAapleDate)
 summary(newsAapleDate)
+
+
+#Tesla 
+
+
+newsTesla <- subset(allNews, allNews$ticker == "TSLA")
+summary(newsTesla)
+newsTesla$Date <- as.Date(newsTesla$Date)
+
+newsTeslaDate <- subset(newsTesla, newsTesla$Date > "2018-12-31")
+summary(newsTeslaDate)
+str(newsTeslaDate)
+
+newsTeslaDateA <- subset(newsTeslaDate, newsTeslaDate$Date < "2020-01-01") 
+str(newsTeslaDateA)
+summary(newsTeslaDateA)
+
+write.csv(newsTeslaDateA, "NoticiasTesla.csv")
+write.csv(newsAapleDate, "NoticiasApple.csv")
+
+
 
 ```
 # Creando Promedios (Time Series)
@@ -142,7 +164,7 @@ sixtNews <- read_csv("kaggleDB/raw_analyst_ratings(news).csv")
 
 summary(sixtNews)
 
-aaplNews <- stri_locate_all(str = sixtNews$stock , regex = "AAPL")
+#aaplNews <- stri_locate_all(str = sixtNews$stock , regex = "AAPL")
 
 sixtNews$date <- as.Date(sixtNews$date)
 
@@ -236,113 +258,5 @@ plot(analisisComp.aaplPrice,
 
 
 ```
-
-
-
-
-
-
-
-*Ahora para las Polariodades*
-
-
-
-
-
-
-
-
-```{r}
-summary(aaplMerged) #Checamos las fechas para usarla en stats 
-
-#Min.   :2019-01-02 , Max.   :2019-12-31
-
-st.Polar.aapl <- ts(aapl.Polaridad , start = c(1,1), end = c(12, 12), frequency = 12 ) #Le damos formato de serie de tiempo 
-
-?ts
-
-class(st.Polar.aapl) #Checamos 
-
-st.Polar.aapl
-
-#Analisis de componentes
-
-analisisComp.aaplPolar <- decompose(st.Polar.aapl)
-plot(analisisComp.aaplPolar, 
-     xlab = "Tiempo en meses",
-     ylab = "Aleatorio, Estacional, Tendencia, Observada",
-     cex.lab= 1)
-
-
-```
-
-
-
-
-
-
-## Análisis de cambios estructurales
-
-
-
-## Precios 
-```{r}
-library(strucchange)
-
-bp_appl_price <- breakpoints(st.Precios.aapl ~1) #Llamamos al comando breakpoints. 
-
-?breakpoints
-
-summary(bp_appl_price) #Revisamos 
-
-plot(bp_appl_price)
-
-```
-
-```{r}
-
-bp <- breakpoints(bp_appl_price, breaks = 4)
-
-ocus.appl <- efp(st.Polar.aapl ~ breakfactor(bp), type = "OLS-CUSUM")
-plot(ocus.appl)
-
-```
-
-### Polaridad 
-
-```{r}
-library(strucchange)
-
-bp_appl_polar <- breakpoints(st.Polar.aapl ~1) #Llamamos al comando breakpoints. 
-
-?breakpoints
-
-summary(bp_appl_polar) #Revisamos 
-
-plot(bp_appl_polar)
-
-
-```
-
-
-```{r}
-bp <- breakpoints(bp_appl_polar, breaks = 3)
-
-ocus.appl <- efp(st.Polar.aapl ~ breakfactor(bp), type = "OLS-CUSUM")
-plot(ocus.appl)
-```
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
